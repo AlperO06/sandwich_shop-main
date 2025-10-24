@@ -11,7 +11,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Sandwich Shop App',
-      home: OrderScreen(), // Use the new stateful widget here
+      home: OrderScreen(),
     );
   }
 }
@@ -29,6 +29,9 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 0;
+  String _note = ''; // 👈 store user's note
+
+  final TextEditingController _noteController = TextEditingController();
 
   void _increaseQuantity() {
     if (_quantity < widget.maxQuantity) {
@@ -43,35 +46,65 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   @override
+  void dispose() {
+    _noteController.dispose(); // cleanup the controller
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sandwich Counter'),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            OrderItemDisplay(
-              _quantity,
-              'Footlong',
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: _increaseQuantity, // ✅ updated callback
-                  child: const Text('Add'),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              OrderItemDisplay(
+                _quantity,
+                'Footlong',
+              ),
+              const SizedBox(height: 20),
+              // 👇 TextField for adding a note
+              TextField(
+                controller: _noteController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Add a note (e.g., "no onions", "extra pickles")',
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _decreaseQuantity, // ✅ updated callback
-                  child: const Text('Remove'),
+                onChanged: (value) {
+                  setState(() {
+                    _note = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _increaseQuantity,
+                    child: const Text('Add'),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: _decreaseQuantity,
+                    child: const Text('Remove'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // 👇 Display the note below the buttons
+              if (_note.isNotEmpty)
+                Text(
+                  'Note: $_note',
+                  style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
