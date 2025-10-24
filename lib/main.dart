@@ -29,16 +29,12 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 0;
-  String _note = ''; // 👈 store user's note
-
+  String _note = '';
   final TextEditingController _noteController = TextEditingController();
 
   void _increaseQuantity() {
     if (_quantity < widget.maxQuantity) {
-      setState(() {
-        _quantity++;
-        print('Current quantity: $_quantity');
-      });
+      setState(() => _quantity++);
     }
   }
 
@@ -50,12 +46,15 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   void dispose() {
-    _noteController.dispose(); // cleanup the controller
+    _noteController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool canAdd = _quantity < widget.maxQuantity;
+    final bool canRemove = _quantity > 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sandwich Counter'),
@@ -71,40 +70,33 @@ class _OrderScreenState extends State<OrderScreen> {
                 'Footlong',
               ),
               const SizedBox(height: 20),
-              // 👇 TextField for adding a note
               TextField(
                 controller: _noteController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Add a note (e.g., "no onions", "extra pickles")',
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    _note = value;
-                  });
-                },
+                onChanged: (value) => setState(() => _note = value),
               ),
               const SizedBox(height: 20),
-              // 👇 Use our new StyledButton widgets here
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // buttons apart
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   StyledButton(
                     label: 'Add',
                     icon: Icons.add,
                     color: Colors.green,
-                    onPressed: _increaseQuantity,
+                    onPressed: canAdd ? _increaseQuantity : null, // 👈 disables when max reached
                   ),
                   StyledButton(
                     label: 'Remove',
                     icon: Icons.remove,
                     color: Colors.red,
-                    onPressed: _decreaseQuantity,
+                    onPressed: canRemove ? _decreaseQuantity : null, // 👈 disables when 0
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              // 👇 Display the note below the buttons
               if (_note.isNotEmpty)
                 Text(
                   'Note: $_note',
@@ -118,12 +110,12 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 }
 
-// 👇 Reusable custom button widget
+// 👇 Reusable StyledButton with built-in disabled state handling
 class StyledButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed; // nullable so we can disable it
 
   const StyledButton({
     super.key,
@@ -136,9 +128,9 @@ class StyledButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: onPressed,
+      onPressed: onPressed, // if null → button is disabled
       style: ElevatedButton.styleFrom(
-        backgroundColor: color,
+        backgroundColor: onPressed == null ? Colors.grey : color,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         textStyle: const TextStyle(
