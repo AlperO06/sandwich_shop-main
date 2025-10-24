@@ -35,7 +35,10 @@ class _OrderScreenState extends State<OrderScreen> {
 
   void _increaseQuantity() {
     if (_quantity < widget.maxQuantity) {
-      setState(() => _quantity++);
+      setState(() {
+        _quantity++;
+        print('Current quantity: $_quantity');
+      });
     }
   }
 
@@ -82,17 +85,21 @@ class _OrderScreenState extends State<OrderScreen> {
                 },
               ),
               const SizedBox(height: 20),
+              // 👇 Use our new StyledButton widgets here
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // buttons apart
                 children: [
-                  ElevatedButton(
+                  StyledButton(
+                    label: 'Add',
+                    icon: Icons.add,
+                    color: Colors.green,
                     onPressed: _increaseQuantity,
-                    child: const Text('Add'),
                   ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
+                  StyledButton(
+                    label: 'Remove',
+                    icon: Icons.remove,
+                    color: Colors.red,
                     onPressed: _decreaseQuantity,
-                    child: const Text('Remove'),
                   ),
                 ],
               ),
@@ -111,6 +118,40 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 }
 
+// 👇 Reusable custom button widget
+class StyledButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onPressed;
+
+  const StyledButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      icon: Icon(icon),
+      label: Text(label),
+    );
+  }
+}
+
 class OrderItemDisplay extends StatelessWidget {
   final int quantity;
   final String itemType;
@@ -119,6 +160,10 @@ class OrderItemDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text('$quantity $itemType sandwich(es): ${'🥪' * quantity}');
+    return Text(
+      '$quantity $itemType sandwich(es): ${'🥪' * quantity}',
+      style: const TextStyle(fontSize: 18),
+      textAlign: TextAlign.center,
+    );
   }
 }
