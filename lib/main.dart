@@ -30,6 +30,7 @@ class OrderScreen extends StatefulWidget {
 class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 0;
   String _note = '';
+  String _sandwichType = 'Footlong'; // 🆕 New state variable
   final TextEditingController _noteController = TextEditingController();
 
   void _increaseQuantity() {
@@ -65,11 +66,39 @@ class _OrderScreenState extends State<OrderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              // Display sandwich order summary
               OrderItemDisplay(
                 _quantity,
-                'Footlong',
+                _sandwichType,
               ),
+
               const SizedBox(height: 20),
+
+              // 🆕 Sandwich type selector
+              SegmentedButton<String>(
+                segments: const <ButtonSegment<String>>[
+                  ButtonSegment(
+                    value: 'Footlong',
+                    label: Text('Footlong'),
+                    icon: Icon(Icons.straighten),
+                  ),
+                  ButtonSegment(
+                    value: 'Six-inch',
+                    label: Text('Six-inch'),
+                    icon: Icon(Icons.cut),
+                  ),
+                ],
+                selected: <String>{_sandwichType},
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() {
+                    _sandwichType = newSelection.first;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // Notes input field
               TextField(
                 controller: _noteController,
                 decoration: const InputDecoration(
@@ -78,7 +107,10 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
                 onChanged: (value) => setState(() => _note = value),
               ),
+
               const SizedBox(height: 20),
+
+              // Add / Remove buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -86,17 +118,20 @@ class _OrderScreenState extends State<OrderScreen> {
                     label: 'Add',
                     icon: Icons.add,
                     color: Colors.green,
-                    onPressed: canAdd ? _increaseQuantity : null, // 👈 disables when max reached
+                    onPressed: canAdd ? _increaseQuantity : null,
                   ),
                   StyledButton(
                     label: 'Remove',
                     icon: Icons.remove,
                     color: Colors.red,
-                    onPressed: canRemove ? _decreaseQuantity : null, // 👈 disables when 0
+                    onPressed: canRemove ? _decreaseQuantity : null,
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
+
+              // Display user note if any
               if (_note.isNotEmpty)
                 Text(
                   'Note: $_note',
@@ -110,12 +145,12 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 }
 
-// 👇 Reusable StyledButton with built-in disabled state handling
+// Styled reusable button
 class StyledButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback? onPressed; // nullable so we can disable it
+  final VoidCallback? onPressed;
 
   const StyledButton({
     super.key,
@@ -127,23 +162,26 @@ class StyledButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: onPressed, // if null → button is disabled
-      style: ElevatedButton.styleFrom(
-        backgroundColor: onPressed == null ? Colors.grey : color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
+    return Expanded(
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: onPressed == null ? Colors.grey : color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        icon: Icon(icon),
+        label: Text(label),
       ),
-      icon: Icon(icon),
-      label: Text(label),
     );
   }
 }
 
+// Displays the current sandwich order
 class OrderItemDisplay extends StatelessWidget {
   final int quantity;
   final String itemType;
