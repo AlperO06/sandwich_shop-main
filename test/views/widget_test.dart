@@ -57,6 +57,31 @@ void main() {
     });
   });
 
+  group('OrderScreen - Size Switch', () {
+    testWidgets('toggles between footlong and six-inch', (WidgetTester tester) async {
+      // Setup
+      await tester.pumpWidget(const App());
+      
+      // Verify initial state
+      expect(find.textContaining('footlong sandwich'), findsOneWidget);
+      expect(find.textContaining('six-inch sandwich'), findsNothing);
+
+      // Toggle to six-inch
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+
+      expect(find.textContaining('footlong sandwich'), findsNothing);
+      expect(find.textContaining('six-inch sandwich'), findsOneWidget);
+
+      // Toggle back to footlong
+      await tester.tap(find.byType(Switch));
+      await tester.pump();
+
+      expect(find.textContaining('footlong sandwich'), findsOneWidget);
+      expect(find.textContaining('six-inch sandwich'), findsNothing);
+    });
+  });
+
   group('OrderScreen - Controls', () {
     testWidgets('changes bread type with DropdownMenu',
         (WidgetTester tester) async {
