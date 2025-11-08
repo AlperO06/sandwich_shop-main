@@ -105,6 +105,12 @@ class _OrderScreenState extends State<OrderScreen> {
       noteForDisplay = _notesController.text;
     }
 
+    final pricing = PricingRepository(
+      quantity: _quantity,
+      isFootlong: _isFootlong,
+    );
+    final total = pricing.calculateTotal();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -121,6 +127,11 @@ class _OrderScreenState extends State<OrderScreen> {
               itemType: sandwichType,
               breadType: _selectedBreadType,
               orderNote: noteForDisplay,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Total: £${total.toStringAsFixed(2)}',
+              style: heading1.copyWith(color: Colors.green),
             ),
             const SizedBox(height: 20),
             Row(
