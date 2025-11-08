@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_styles.dart';
+import 'views/app_styles.dart';
 
 enum BreadType { white, wheat, wholemeal }
 
@@ -229,8 +229,9 @@ class OrderItemDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String sandwiches = quantity > 0 ? List.filled(quantity, '🥪').join() : '';
     String displayText =
-        '$quantity ${breadType.name} $itemType sandwich(es): ${'🥪' * quantity}';
+        '$quantity ${breadType.name} $itemType sandwich(es): $sandwiches';
 
     return Column(
       children: [
