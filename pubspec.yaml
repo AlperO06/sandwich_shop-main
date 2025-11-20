@@ -57,7 +57,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/images/logo.png
+    - assets/images/sandwich_white.png
+    - assets/images/sandwich_wheat.png
+    - assets/images/sandwich_wholemeal.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

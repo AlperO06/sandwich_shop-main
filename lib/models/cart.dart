@@ -6,21 +6,16 @@ class Item { // Define the Item class if not already defined
 }
 
 class Cart {
-  List<Item> items = []; // Assuming Item is a class representing an item in the cart
-  double totalPrice = 0.0;
+  final int quantity;
+  final bool isFootlong;
 
-  void addItem(Item item) {
-    items.add(item);
-    calculateTotalPrice();
-  }
+  Cart({
+    required this.quantity,
+    required this.isFootlong,
+  });
 
-  void removeItem(Item item) {
-    items.remove(item);
-    calculateTotalPrice();
-  }
-
-  void calculateTotalPrice() {
-    // Assuming PricingRepository is not used, calculate total manually
-    totalPrice = items.fold(0, (sum, item) => sum + item.price);
+  double calculatePrice() {
+    double basePrice = isFootlong ? 7.0 : 5.0;
+    return basePrice * quantity;
   }
 }

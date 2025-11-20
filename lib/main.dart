@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'views/app_styles.dart';
-import 'repositories/pricing_repository.dart';
+import 'package:sandwich_shop/views/app_styles.dart';
+import 'package:sandwich_shop/models/sandwich.dart';
+import 'package:sandwich_shop/models/cart.dart';
 
-enum BreadType { white, wheat, wholemeal }
 
 void main() {
   runApp(const App());
@@ -35,7 +35,7 @@ class _OrderScreenState extends State<OrderScreen> {
   int _quantity = 0;
   final TextEditingController _notesController = TextEditingController();
   bool _isFootlong = true;
-  bool _isToasted = false; // <-- Added toasted state
+  bool _isToasted = false;
   BreadType _selectedBreadType = BreadType.white;
 
   @override
@@ -106,11 +106,11 @@ class _OrderScreenState extends State<OrderScreen> {
       noteForDisplay = _notesController.text;
     }
 
-    final pricing = PricingRepository(
+    final cart = Cart(
       quantity: _quantity,
       isFootlong: _isFootlong,
     );
-    final total = pricing.calculateTotal();
+    final total = cart.calculatePrice();
 
     return Scaffold(
       appBar: AppBar(
@@ -118,7 +118,7 @@ class _OrderScreenState extends State<OrderScreen> {
           height: 100,
           child: Image.asset('assets/images/logo.png'),
         ),
-        title: const Text(
+        title: Text(
           'Sandwich Counter',
           style: heading1,
         ),
@@ -132,7 +132,7 @@ class _OrderScreenState extends State<OrderScreen> {
               itemType: sandwichType,
               breadType: _selectedBreadType,
               orderNote: noteForDisplay,
-              isToasted: _isToasted, // <-- Pass toasted state (optional)
+              isToasted: _isToasted,
             ),
             const SizedBox(height: 10),
             Text(
@@ -143,19 +143,19 @@ class _OrderScreenState extends State<OrderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('six-inch', style: normalText),
+                Text('six-inch', style: normalText),
                 Switch(
                   key: const Key('size_switch'),
                   value: _isFootlong,
                   onChanged: _onSandwichTypeChanged,
                 ),
-                const Text('footlong', style: normalText),
+                Text('footlong', style: normalText),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('untoasted', style: normalText),
+                Text('untoasted', style: normalText),
                 Switch(
                   key: const Key('toast_switch'),
                   value: _isToasted,
@@ -163,7 +163,7 @@ class _OrderScreenState extends State<OrderScreen> {
                     setState(() => _isToasted = value);
                   },
                 ),
-                const Text('toasted', style: normalText),
+                Text('toasted', style: normalText),
               ],
             ),
             const SizedBox(height: 10),
@@ -251,7 +251,7 @@ class OrderItemDisplay extends StatelessWidget {
   final String itemType;
   final BreadType breadType;
   final String orderNote;
-  final bool isToasted; // <-- Add toasted parameter
+  final bool isToasted;
 
   const OrderItemDisplay({
     super.key,
@@ -259,23 +259,42 @@ class OrderItemDisplay extends StatelessWidget {
     required this.itemType,
     required this.breadType,
     required this.orderNote,
-    this.isToasted = false, // <-- Default value
+    this.isToasted = false,
   });
+
+  String _getSandwichImagePath() {
+    switch (breadType) {
+      case BreadType.white:
+        return 'assets/images/sandwich_white.png';
+      case BreadType.wheat:
+        return 'assets/images/sandwich_wheat.png';
+      case BreadType.wholemeal:
+        return 'assets/images/sandwich_wholemeal.png';
+    }
+    return 'assets/images/sandwich_white.png';
+  }
 
   @override
   Widget build(BuildContext context) {
     String sandwiches = quantity > 0 ? List.filled(quantity, '🥪').join() : '';
-    final pricing = PricingRepository(
+    final cart = Cart(
       quantity: quantity,
       isFootlong: itemType == 'footlong',
     );
-    final total = pricing.calculateTotal();
+    final total = cart.calculatePrice();
     String toastedText = isToasted ? 'toasted' : 'untoasted';
     String displayText =
         '$quantity ${breadType.name} $toastedText $itemType sandwich(es): $sandwiches\nTotal: £${total.toStringAsFixed(2)}';
 
     return Column(
       children: [
+        Image.asset(
+          _getSandwichImagePath(),
+          width: 150,
+          height: 150,
+          fit: BoxFit.cover,
+        ),
+        const SizedBox(height: 12),
         Text(
           displayText,
           style: normalText,
