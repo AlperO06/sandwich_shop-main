@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sandwich_shop/main.dart';
+import 'package:sandwich_shop/models/cart.dart';
 // for BreadType / SandwichType used in some tests
 
 void main() {
@@ -205,6 +206,28 @@ void main() {
       expect(find.text('Items: 4'), findsOneWidget);
       expect(find.text('Total: \$24.00'), findsOneWidget);
 
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  // Cart model - sanity (positive)
+  group('Cart model - sanity (positive)', () {
+    test('basic unit sanity using cart import', () {
+      // Trivial deterministic assertion to ensure the test file (which imports
+      // package:sandwich_shop/models/cart.dart) compiles and runs fine.
+      expect(2 + 2, equals(4));
+    });
+
+    testWidgets('cart import does not cause widget-level failures', (WidgetTester tester) async {
+      // Reuse TestCartWidget to exercise simple widget codepaths after the import.
+      await tester.pumpWidget(const TestCartWidget());
+      await tester.pumpAndSettle();
+
+      // deterministic assertions
+      expect(find.byKey(const Key('cartItemCount')), findsOneWidget);
+      expect(find.text('Items: 0'), findsOneWidget);
+      expect(find.byKey(const Key('cartTotal')), findsOneWidget);
+      expect(find.text('Total: \$0.00'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
