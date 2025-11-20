@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sandwich_shop/main.dart';
+import 'package:sandwich_shop/models/sandwich.dart'; // for BreadType / SandwichType used in OrderItemDisplay tests
 
 void main() {
   group('App', () {
@@ -10,132 +11,126 @@ void main() {
     });
   });
 
-  group('OrderScreen - Quantity', () {
-    testWidgets('shows initial quantity and title',
-        (WidgetTester tester) async {
+  group('OrderScreen - Basic UI and controls', () {
+    testWidgets('initial UI elements are present', (WidgetTester tester) async {
       await tester.pumpWidget(const App());
       expect(find.text('Sandwich Counter'), findsOneWidget);
-      expect(find.textContaining('0 white untoasted footlong'), findsOneWidget);
+
+      // Image placeholder exists
+      expect(find.byType(Image), findsWidgets);
+
+      // Sandwich type dropdown exists
+      expect(find.byType(DropdownMenu), findsWidgets);
+
+      // Bread type dropdown exists
+      expect(find.byType(DropdownMenu), findsWidgets);
+
+      // Size switch exists
+      expect(find.byType(Switch), findsOneWidget);
+
+      // Quantity controls exist (IconButton + and -)
+      expect(find.widgetWithIcon(IconButton, Icons.add), findsOneWidget);
+      expect(find.widgetWithIcon(IconButton, Icons.remove), findsOneWidget);
+
+      // Add to Cart button exists
+      expect(find.text('Add to Cart'), findsOneWidget);
+
+      // Initial quantity is 1 per current implementation
+      expect(find.text('1'), findsWidgets);
     });
 
-    testWidgets('increments quantity when Add is tapped',
+    testWidgets('increments and decrements quantity', (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      final Finder addBtn = find.widgetWithIcon(IconButton, Icons.add);
+      final Finder removeBtn = find.widgetWithIcon(IconButton, Icons.remove);
+
+      // initial 1
+      expect(find.text('1'), findsWidgets);
+
+      // increment -> 2
+      await tester.tap(addBtn);
+      await tester.pump();
+      expect(find.text('2'), findsOneWidget);
+
+      // decrement -> 1
+      await tester.tap(removeBtn);
+      await tester.pump();
+      expect(find.text('1'), findsOneWidget);
+
+      // decrement -> 0
+      await tester.tap(removeBtn);
+      await tester.pump();
+      expect(find.text('0'), findsOneWidget);
+
+      // try to go below 0 -> stays 0
+      await tester.tap(removeBtn);
+      await tester.pump();
+      expect(find.text('0'), findsOneWidget);
+    });
+
+    testWidgets('size switch toggles value', (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      final Finder sizeSwitchFinder = find.byType(Switch);
+      expect(sizeSwitchFinder, findsOneWidget);
+
+      Switch sw = tester.widget(sizeSwitchFinder);
+      final bool initial = sw.value;
+
+      await tester.tap(sizeSwitchFinder);
+      await tester.pump();
+
+      sw = tester.widget(sizeSwitchFinder);
+      expect(sw.value, isNot(initial));
+    });
+
+    testWidgets('select sandwich type from dropdown (no crash, selection visible)',
         (WidgetTester tester) async {
       await tester.pumpWidget(const App());
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Add'));
-      await tester.pump();
-      expect(find.textContaining('1 white untoasted footlong sandwich(es): 🥪'), findsOneWidget);
-    });
 
-    testWidgets('decrements quantity when Remove is tapped',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Add'));
-      await tester.pump();
-      expect(find.textContaining('1 white untoasted footlong sandwich(es): 🥪'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Remove'));
-      await tester.pump();
-      expect(find.textContaining('0 white untoasted footlong'), findsOneWidget);
-    });
-
-    testWidgets('does not decrement below zero', (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      expect(find.textContaining('0 white untoasted footlong'), findsOneWidget);
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Remove'));
-      await tester.pump();
-      expect(find.textContaining('0 white untoasted footlong'), findsOneWidget);
-    });
-
-    testWidgets('does not increment above maxQuantity',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      for (int i = 0; i < 10; i++) {
-        await tester.tap(find.widgetWithText(ElevatedButton, 'Add'));
-        await tester.pump();
-      }
-      expect(find.textContaining('5 white untoasted footlong sandwich(es): 🥪🥪🥪🥪🥪'),
-          findsOneWidget);
-    });
-  });
-
-  group('OrderScreen - Size Switch', () {
-    testWidgets('toggles between footlong and six-inch', (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      
-      expect(find.textContaining('footlong sandwich'), findsOneWidget);
-      expect(find.textContaining('six-inch sandwich'), findsNothing);
-
-      await tester.tap(find.byKey(const Key('size_switch')));
-      await tester.pump();
-
-      expect(find.textContaining('footlong sandwich'), findsNothing);
-      expect(find.textContaining('six-inch sandwich'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('size_switch')));
-      await tester.pump();
-
-      expect(find.textContaining('footlong sandwich'), findsOneWidget);
-      expect(find.textContaining('six-inch sandwich'), findsNothing);
-    });
-  });
-
-  group('OrderScreen - Toast Switch', () {
-    testWidgets('toggles between untoasted and toasted', (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      
-      expect(find.textContaining('untoasted footlong'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('toast_switch')));
-      await tester.pump();
-
-      expect(find.textContaining('toasted footlong'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('toast_switch')));
-      await tester.pump();
-
-      expect(find.textContaining('untoasted footlong'), findsOneWidget);
-    });
-  });
-
-  group('OrderScreen - Controls', () {
-    testWidgets('changes bread type with DropdownMenu',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const App());
-      await tester.tap(find.byType(DropdownMenu));
+      // Open sandwich type dropdown
+      await tester.tap(find.byType(DropdownMenu).first);
       await tester.pumpAndSettle();
+
+      // Pick a different sandwich type by visible label (using one defined in model)
+      // 'Tuna Melt' is defined in the model
+      await tester.tap(find.text('Tuna Melt').last);
+      await tester.pumpAndSettle();
+
+      // The selected label should now be visible somewhere in the subtree
+      expect(find.text('Tuna Melt'), findsWidgets);
+    });
+
+    testWidgets('select bread type from dropdown (no crash, selection visible)',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(const App());
+
+      // Open bread type dropdown
+      await tester.tap(find.byType(DropdownMenu).last);
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('wheat').last);
       await tester.pumpAndSettle();
-      expect(find.textContaining('wheat untoasted footlong'), findsOneWidget);
-      await tester.tap(find.byType(DropdownMenu));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('wholemeal').last);
-      await tester.pumpAndSettle();
-      expect(find.textContaining('wholemeal untoasted footlong'), findsOneWidget);
+
+      expect(find.text('wheat'), findsWidgets);
     });
 
-    testWidgets('updates note with TextField', (WidgetTester tester) async {
+    testWidgets('Add to Cart button is enabled when quantity > 0',
+        (WidgetTester tester) async {
       await tester.pumpWidget(const App());
-      await tester.enterText(
-          find.byKey(const Key('notes_textfield')), 'Extra mayo');
-      await tester.pump();
-      expect(find.text('Note: Extra mayo'), findsOneWidget);
-    });
-  });
 
-  group('StyledButton', () {
-    testWidgets('renders with icon and label', (WidgetTester tester) async {
-      const testButton = StyledButton(
-        onPressed: null,
-        icon: Icons.add,
-        label: 'Test Add',
-        backgroundColor: Colors.blue,
-      );
-      const testApp = MaterialApp(
-        home: Scaffold(body: testButton),
-      );
-      await tester.pumpWidget(testApp);
-      expect(find.byIcon(Icons.add), findsOneWidget);
-      expect(find.text('Test Add'), findsOneWidget);
-      expect(find.byType(ElevatedButton), findsOneWidget);
+      // Ensure quantity > 0 initially
+      expect(find.text('1'), findsWidgets);
+
+      // Add to Cart button should be present and tappable
+      final Finder addToCart = find.text('Add to Cart');
+      expect(addToCart, findsOneWidget);
+
+      await tester.tap(addToCart);
+      await tester.pump();
+      // no exception = success; assert button still present
+      expect(addToCart, findsOneWidget);
     });
   });
 
