@@ -118,7 +118,7 @@ class _OrderScreenState extends State<OrderScreen> {
           height: 100,
           child: Image.asset('assets/images/logo.png'),
         ),
-        title: Text(
+        title: const Text(
           'Sandwich Counter',
           style: heading1,
         ),
@@ -143,19 +143,19 @@ class _OrderScreenState extends State<OrderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('six-inch', style: normalText),
+                const Text('six-inch', style: normalText),
                 Switch(
                   key: const Key('size_switch'),
                   value: _isFootlong,
                   onChanged: _onSandwichTypeChanged,
                 ),
-                Text('footlong', style: normalText),
+                const Text('footlong', style: normalText),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('untoasted', style: normalText),
+                const Text('untoasted', style: normalText),
                 Switch(
                   key: const Key('toast_switch'),
                   value: _isToasted,
@@ -163,7 +163,7 @@ class _OrderScreenState extends State<OrderScreen> {
                     setState(() => _isToasted = value);
                   },
                 ),
-                Text('toasted', style: normalText),
+                const Text('toasted', style: normalText),
               ],
             ),
             const SizedBox(height: 10),
@@ -271,7 +271,7 @@ class OrderItemDisplay extends StatelessWidget {
       case BreadType.wholemeal:
         return 'assets/images/sandwich_wholemeal.png';
     }
-    return 'assets/images/sandwich_white.png';
+    // fallback to ensure a String is always returned
   }
 
   @override
