@@ -45,7 +45,24 @@ class _OrderScreenState extends State<OrderScreen> {
   // store latest confirmation message for persistent UI display
   String _lastConfirmation = '';
   
-  TextStyle? get heading2 => null;
+  // derive a smaller heading style from heading1 so quantity text has a valid style
+  TextStyle get heading2 {
+    try {
+      // heading1 comes from app_styles.dart; derive a slightly smaller variant
+      return heading1.copyWith(
+        fontSize: (heading1.fontSize ?? 20) * 0.9,
+      );
+    } catch (_) {
+      // fallback if heading1 isn't available for some reason
+      return const TextStyle(fontSize: 18, fontWeight: FontWeight.bold);
+    }
+  }
+
+  // NEW: tracked derived cart state so UI shows total quantities and last-added subtotal
+  int _cartItemCount = 0; // total quantity across all entries
+  double _cartTotal = 0.0; // total price across cart
+  int? _lastAddedQuantity; // quantity added in the most recent add action
+  double? _lastAddedSubtotal; // subtotal (price * qty) of the most recent add action
 
   @override
   void initState() {
@@ -53,12 +70,43 @@ class _OrderScreenState extends State<OrderScreen> {
     _notesController.addListener(() {
       setState(() {});
     });
+
+    // initialize tracked values from the cart (cart is empty at start, but kept for completeness)
+    _cartItemCount = _computeTotalItemsFromCart();
+    _cartTotal = _cart.totalPrice();
   }
 
   @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
+  }
+
+  int _computeTotalItemsFromCart() {
+    try {
+      final values = _cart.entries;
+      // If entries is a Map, sum the quantities
+      if (values is Map) {
+        return (values.values).fold<int>(0, (prev, e) => prev + (e as int));
+      }
+
+      // If entries is an Iterable (like List), try to sum explicit quantities
+      int sum = 0;
+      for (final e in values) {
+        if (e is int) {
+          sum += e as int;
+        } else {
+          try {
+            final qty = (e as dynamic).quantity as int;
+            sum += qty;
+          } catch (_) {}
+        }
+      }
+      return sum;
+        } catch (_) {
+      // ignore and default to 0
+    }
+    return 0;
   }
 
   void _addToCart() {
@@ -69,9 +117,17 @@ class _OrderScreenState extends State<OrderScreen> {
         breadType: _selectedBreadType,
       );
 
+      // capture previous totals so we can compute the delta (last-added subtotal)
+      final double prevTotal = _cart.totalPrice();
+      // (prev item count not required here)
+
       setState(() {
         _cart.add(sandwich, quantity: _quantity);
       });
+
+      // recompute totals from cart after adding
+      final double newTotal = _cart.totalPrice();
+      final int newItemCount = _computeTotalItemsFromCart();
 
       final sizeText = _isFootlong ? 'footlong' : 'six-inch';
       final confirmationMessage =
@@ -82,9 +138,16 @@ class _OrderScreenState extends State<OrderScreen> {
         SnackBar(content: Text(confirmationMessage)),
       );
 
-      // store message for persistent display
+      // store message for persistent display and update tracked totals & last-added info
       setState(() {
         _lastConfirmation = confirmationMessage;
+
+        _cartItemCount = newItemCount;
+        _cartTotal = newTotal;
+
+        _lastAddedQuantity = _quantity;
+        // compute delta safely (in case of rounding)
+        _lastAddedSubtotal = (newTotal - prevTotal).abs();
       });
 
       debugPrint(confirmationMessage);
@@ -262,7 +325,8 @@ class _OrderScreenState extends State<OrderScreen> {
                     onPressed: _getDecreaseCallback(),
                     icon: const Icon(Icons.remove),
                   ),
-                  Text('$_quantity', style: heading2),
+                  // show quantity using heading2 but force black color so it's visible
+                  Text('$_quantity', style: heading2.copyWith(color: Colors.black)),
                   IconButton(
                     onPressed: _increaseQuantity,
                     icon: const Icon(Icons.add),
@@ -291,22 +355,32 @@ class _OrderScreenState extends State<OrderScreen> {
 
               const SizedBox(height: 12),
 
-              // NEW: Permanent cart summary showing item count and total price
+              // UPDATED: Permanent cart summary showing total item count, total price,
+              // and the most-recently-added quantity + subtotal.
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   children: [
                     Text(
-                      'Cart: ${_cart.entries.length} items',
+                      'Cart: $_cartItemCount items',
                       key: const Key('cart_item_count'),
                       style: normalText,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total: £${_cart.totalPrice().toStringAsFixed(2)}',
+                      'Total: £${_cartTotal.toStringAsFixed(2)}',
                       key: const Key('cart_total_price'),
                       style: heading1.copyWith(color: Colors.green),
                     ),
+                    if (_lastAddedQuantity != null && _lastAddedSubtotal != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Last added: ${_lastAddedQuantity} x — £${_lastAddedSubtotal!.toStringAsFixed(2)}',
+                          key: const Key('cart_last_added'),
+                          style: normalText,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -318,6 +392,10 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
     );
   }
+}
+
+extension on List<CartEntry> {
+  get values => null;
 }
 
 class StyledButton extends StatelessWidget {

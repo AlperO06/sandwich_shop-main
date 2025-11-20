@@ -1,5 +1,28 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sandwich_shop/models/sandwich.dart';
+
+enum SandwichType { veggieDelight, chickenTeriyaki, tunaMelt, meatballMarinara }
+enum BreadType { white, wheat, wholemeal }
+
+class Sandwich {
+  final SandwichType type;
+  final bool isFootlong;
+  final BreadType breadType;
+
+  Sandwich({required this.type, required this.isFootlong, required this.breadType});
+
+  // Build readable name from enum name: 'veggieDelight' -> 'Veggie Delight'
+  String get name {
+    final raw = type.name;
+    final spaced = raw.replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}');
+    return spaced.split(' ').map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+  }
+
+  // Build asset path depending on isFootlong
+  String get image {
+    final size = isFootlong ? 'footlong' : 'six_inch';
+    return 'assets/images/${type.name}_$size.png';
+  }
+}
 
 void main() {
   group('Sandwich model', () {

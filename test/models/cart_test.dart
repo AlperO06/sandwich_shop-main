@@ -18,7 +18,7 @@ class Cart { // Define the Cart class for managing items
     items.remove(item);
   }
 
-  double get totalPrice => items.fold(0, (sum, item) => sum + item.price);
+  double get totalPrice => items.fold(0.0, (double sum, item) => sum + item.price);
 }
 
 void main() {
