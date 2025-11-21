@@ -243,6 +243,21 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // add a logo on the top-left; adjust leadingWidth so title has room
+        leadingWidth: 64,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Image.asset(
+            'assets/images/logo.png', // add or adjust path to your logo asset
+            width: 40,
+            height: 40,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // fallback icon if the image asset is missing
+              return const Icon(Icons.fastfood);
+            },
+          ),
+        ),
         // remove const so heading1 (non-const TextStyle) is allowed
         title: Text(
           'Sandwich Counter',
